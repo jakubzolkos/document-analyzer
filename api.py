@@ -35,7 +35,7 @@ class FileUploader:
         try:
             # Check for valid credentials
             if not check_credentials(request.headers):
-                raise InvalidCredentialsError()
+                raise AuthenticationError()
 
             # Check for file size
             file = request.files.get('file')
@@ -51,7 +51,7 @@ class FileUploader:
             # Attempt to upload file
             upload_result = upload_to_cloud(file)
 
-        except InvalidCredentialsError:
+        except AuthenticationError:
             return {'error': 'Invalid credentials or user does not exist'}, 401
 
         except FileTooLargeError:
@@ -62,15 +62,6 @@ class FileUploader:
 
         except UploadFailedError as e:
             return {'error': str(e)}, 500
-
-        except CloudStorageFullError:
-            return {'error': 'Cloud storage full'}, 503
-
-        except NoPermissionError:
-            return {'error': 'No permission to modify file'}, 403
-
-        except ModifyContentError:
-            return {'error': 'Error modifying content'}, 500
 
         # Return the upload result
         return upload_result, 201
