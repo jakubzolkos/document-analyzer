@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class IngesterConfig(AppConfig):
+class ApiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'smartdoc.ingester'
+    name = 'smartdoc.api'
