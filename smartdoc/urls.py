@@ -20,4 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('smartdoc.authentication.urls')),
+    # path('', include('smartdoc.nlp.urls')),
+    # path('', include('smartdoc.api.urls'))
 ]
