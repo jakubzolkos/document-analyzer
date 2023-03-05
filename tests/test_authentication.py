@@ -3,7 +3,8 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import User
 from django.test import Client
 from django.urls import reverse
-
+import django
+django.setup()
 
 @pytest.fixture
 def create_user(db):
