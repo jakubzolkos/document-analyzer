@@ -6,6 +6,7 @@ from django.urls import reverse
 import django
 django.setup()
 
+
 @pytest.fixture
 def create_user(db):
     """
@@ -21,7 +22,6 @@ def test_registration(create_user):
     """
     Test whether a user was added to the user databse
     """
-    client = Client()
     assert User.objects.filter(username = 'testuser').exists()
 
 
