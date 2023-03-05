@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - test
-  pull_request:
-    branches:
       - main
 
 jobs:
@@ -41,9 +39,3 @@ jobs:
         run: |
           pytest 
       
-      - name: Push to main
-        if: success()
-        uses: ad-m/github-push-action@master
-        with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: main
