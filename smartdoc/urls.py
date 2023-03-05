@@ -16,15 +16,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from .authentication import views as user_view
-from django.contrib.auth import views as auth
-from django.urls import path
-from .authentication.views import register_view, UserLoginView, UserLogoutView
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('register/', register_view, name='register'),
-    path('', UserLoginView.as_view(), name='login'),
-    path('logout/', UserLogoutView.as_view(), name='logout'),
+    path('', include('smartdoc.authentication.urls')),
 ]

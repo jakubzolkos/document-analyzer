@@ -1,8 +1,9 @@
-from django.urls import path, include
-from django.conf import settings
-from . import views
-from django.conf.urls.static import static
- 
+from django.urls import path
+from .views import LoginView, LogoutView,HomeView
+
+
 urlpatterns = [
-         path('', views.index, name ='index'),
+    path('login/', LoginView.as_view(),name='account_login'),
+    path('logout/', LogoutView.as_view(), name='account_logout'),
+    path('', HomeView.as_view(),name='home'),
 ]
