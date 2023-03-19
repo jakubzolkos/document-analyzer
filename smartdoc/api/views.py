@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from .serializers import FileUploadSerializer
 from rest_framework.viewsets import ViewSet
+from django.core.files.storage import FileSystemStorage
 
 
 class FileUpload(ViewSet):
