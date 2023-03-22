@@ -68,9 +68,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'smartdoc.authentication.midleware.SessionIdleTimeout'
 ]
 
 ROOT_URLCONF = 'smartdoc.urls'
+SESSION_COOKIE_AGE = 1800
 
 import os
 TEMPLATES = [
