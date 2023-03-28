@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+
+	<div class="container">
+		<input type="checkbox" id="check">
+
+		<div class="registration form">
+			<header>Signup</header>
+			<form method="POST">
+				{% csrf_token %}
+				{{form.username}}
+				{{form.email}}
+				{{form.password1}}
+				{{form.password2}}
+				<button class="style_button" name="sign-up">Sign up</button>
+			</form>
+
+			<div class="signup">
+				<span class="signup">Already have an account?
+					<label for="check">Login</label>
+				</span>
+			</div>
+		</div>
+
+		<div class="login form">
+			<header>Login</header>
+			<form method="GET">
+				{% csrf_token %}
+				<input type="text" name="username" placeholder="Username" required="">
+				<input type="password" name="pswd" placeholder="Password" required="">
+				<a href="#">Forgot password?</a>
+				<button class="style_button" name="sign-in">Login</button>
+			</form>
+
+			<div class="signup">
+				<span class="signup">Don't have an account?
+					<label for="check">Signup</label>
+				</span>
+			</div>
+		</div>
+  </div>
+
+
+{% endblock %}
