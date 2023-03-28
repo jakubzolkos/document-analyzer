@@ -2,16 +2,6 @@ from rest_framework.serializers import Serializer, FileField, ReadOnlyField, Ser
 from .models import Document
 
 
-class FileUploadSerializer(Serializer):
-
-    file_uploaded = FileField()
-    
-    class Meta:
-
-        fields = ['file_uploaded']
-
-
-
 class DocumentSerializer(Serializer):
 
     file_name = CharField(max_length=200)

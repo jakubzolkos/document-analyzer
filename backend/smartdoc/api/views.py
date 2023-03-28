@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.views import APIView, View
 from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
@@ -11,55 +11,50 @@ from .models import Document
 import queue
 import threading
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+import concurrent.futures
+import time
+from django.core.files.storage import FileSystemStorage
 
 
-class FileUpload(ViewSet):
-    """
-    Enables file uploading for the user
-    """
-    permission_classes = [IsAuthenticated]
-    serializer_class = FileUploadSerializer
-    parser_classes = (FormParser, MultiPartParser)
+class FileUpload(APIView):
+
+    def get(self, request):
+        
+        return render(request, 'upload.html')
+
+    def post(self, request):
+
+        user = request.user
+        files = request.FILES.getlist('files')
+
+        start_time = time.time()
+
+        # Define a function to handle uploading a single file
+        def upload_file(file):
+            
+            storage = FileSystemStorage()
+            filename = storage.save(file.name, file)
+
+            Document.objects.create(
+                user_id=user,
+                file_name=str(file.name).split(".")[0],
+                file_size=file.size,
+                file_type="." + str(file.name).split(".")[-1],
+                file_path=filename,
+            )
 
 
-    def process_file(self, job_queue):
-        while not job_queue.empty():
-            file = job_queue.get()
-            document = Document()
-            document.user_id = self.request.user
-            document.file_name = str(file.name).split(".")[0]
-            document.file_size = file.size
-            document.file_type = "." + str(file.name).split(".")[-1]
-            document.save()
-            job_queue.task_done()
+        # Use a ThreadPoolExecutor to upload files in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(upload_file, files)
 
-    def create(self, request, *args, **kwargs):
+        elapsed_time = time.time() - start_time
 
-        files = request.FILES.getlist('file_uploaded')
-        num_files = len(files)
-
-        if num_files > 50:
-            return Response("You can only upload up to 50 files at a time")
-
-        job_queue = queue.Queue()
-        for file in files:
-            job_queue.put(file)
-
-        # Create a thread pool
-        num_threads = 10
-        thread_pool = []
-        for i in range(num_threads):
-            t = threading.Thread(target=self.process_file, args=(job_queue,))
-            t.daemon = True
-            t.start()
-            thread_pool.append(t)
-
-        # wait for all threads to finish
-        for t in thread_pool:
-            t.join()
-
-        return Response("All files have been uploaded")
-
+        return Response({'message': 'Upload completed in {:.2f} seconds.'.format(elapsed_time)})
 
 
 class DocumentList(APIView):
@@ -74,6 +69,7 @@ class DocumentList(APIView):
         documents = Document.objects.filter(user_id=user)
         serializer = DocumentSerializer(documents, many=True)
         return Response(serializer.data)
+
 
 class ParagraphByKeyword(APIView):
     """ 

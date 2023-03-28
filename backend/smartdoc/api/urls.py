@@ -3,17 +3,15 @@ from .views import *
 from rest_framework import routers
 from django.urls import path, include
 
-router = routers.DefaultRouter()
-router.register(r'', FileUpload, basename="upload")
+
 
 """
 API calls for extracting data from the databse
 """
 
 urlpatterns = [
-
     # Upload a file
-    path('api/upload/', include(router.urls), name='upload_file'),
+    path('api/upload/', FileUpload.as_view(), name='upload_files'),
     # View uploaded documents
     path('api/documents/', DocumentList.as_view(), name='documents'),
     # Get all paragraphs with a given keyword 
