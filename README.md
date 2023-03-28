@@ -1,5 +1,5 @@
 # Document Analyzer 
-Written by Jakub Zolkos for EC 530: Software Engieering Principles 
+Written by Jakub Zolkos for EC 530: Software Engineering Principles 
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -50,4 +50,4 @@ Database design is a crucial factor when implementing any web application. The m
 - Tables with locations, addresses, names and institutions 
 - Keyword tables with names and definitions obtained from external website - creating a new document will mark each paragraph within a document with appropriate keyword tags
 
-![Database](https://github.com/ECE530-2023/news-analyzer-jakubzolkos/blob/main/assets/database.png)
+![Database](https://github.com/ECE530-2023/news-analyzer-jakubzolkos/blob/main/backend/assets/database.png)
