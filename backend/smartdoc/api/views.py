@@ -20,10 +20,16 @@ import time
 from django.core.files.storage import FileSystemStorage
 
 
+import threading
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.core.files.storage import FileSystemStorage
+import time
+
 class FileUpload(APIView):
 
     def get(self, request):
-        
+
         return render(request, 'upload.html')
 
     def post(self, request):
@@ -34,11 +40,10 @@ class FileUpload(APIView):
         start_time = time.time()
 
         # Define a function to handle uploading a single file
-        def upload_file(file):
-            
+
+        def save_doc(file):
             storage = FileSystemStorage()
             filename = storage.save(file.name, file)
-
             Document.objects.create(
                 user_id=user,
                 file_name=str(file.name).split(".")[0],
@@ -47,14 +52,21 @@ class FileUpload(APIView):
                 file_path=filename,
             )
 
+        # Create a thread for each file and start them concurrently
+        threads = []
+        for file in files:
+            thread = threading.Thread(target=save_doc, args=(file,))
+            thread.start()
+            threads.append(thread)
 
-        # Use a ThreadPoolExecutor to upload files in parallel
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.map(upload_file, files)
+        # Wait for all threads to complete before returning a response
+        for thread in threads:
+            thread.join()
 
         elapsed_time = time.time() - start_time
 
         return Response({'message': 'Upload completed in {:.2f} seconds.'.format(elapsed_time)})
+
 
 
 class DocumentList(APIView):
