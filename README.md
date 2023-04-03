@@ -1,4 +1,5 @@
 # Document Analyzer 
+[IN PROGRESS]
 Written by Jakub Zolkos for EC 530: Software Engineering Principles 
 ## Table of Contents
 
