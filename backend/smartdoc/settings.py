@@ -41,10 +41,17 @@ INSTALLED_APPS = [
     'crispy_forms',
     'corsheaders',
     'django_bootstrap5',
-    'smartdoc.nlp',
-    'smartdoc.authentication',
-    'smartdoc.api'
+    'nlp',
+    'authentication',
+    'api'
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'authentication.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AUTH_USER_MODEL = 'authentication.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     # {
@@ -69,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'smartdoc.authentication.midleware.SessionIdleTimeout'
+    'authentication.midleware.SessionIdleTimeout'
 ]
 
 ROOT_URLCONF = 'smartdoc.urls'
