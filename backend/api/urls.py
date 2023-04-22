@@ -10,10 +10,12 @@ API calls for extracting data from the databse
 """
 
 urlpatterns = [
-    # Upload a file
-    path('api/upload/', FileUpload.as_view(), name='upload_files'),
-    # View uploaded documents
-    path('api/documents/', DocumentList.as_view(), name='documents'),
+    # View documents
+    path('api/upload/', DocumentsView.as_view(), name='documents'),
+    # Delete files
+    path('api/delete/', DeleteView.as_view(), name='delete'),
+    # Rename file
+    path('api/rename/', RenameView.as_view(), name='rename'),
     # Get all paragraphs with a given keyword 
     path('api/search?keyword=<keyword>', ParagraphByKeyword.as_view(), name='search_paragraph'),
     # Get a keyword definition

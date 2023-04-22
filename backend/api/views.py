@@ -22,11 +22,15 @@ from rest_framework.response import Response
 from django.core.files.storage import FileSystemStorage
 import time
 
-class FileUpload(APIView):
+
+class DocumentsView(APIView):
 
     def get(self, request):
 
-        return render(request, 'upload.html')
+        user = request.user
+        documents = Document.objects.filter(user_id=user)
+        paylod = DocumentSerializer(documents, many=True).data
+        return render(request, 'upload.html', context={'files': paylod})
 
     def post(self, request):
 
@@ -57,24 +61,29 @@ class FileUpload(APIView):
         for thread in threads:
             thread.join()
 
-        elapsed_time = time.time() - start_time
-
-        return Response({'message': 'Upload completed in {:.2f} seconds.'.format(elapsed_time)})
+        return self.get(request)
 
 
+class DeleteView(APIView):
 
-class DocumentList(APIView):
-    """
-    Shows the names of all the uploaded files
-    """
+    def post(self, request):
+        
+        file_name = request.POST["filename"]
+        target_file = Document.objects.filter(user_id=request.user, file_name = file_name)
+        target_file.delete()
 
-    permission_classes = [IsAuthenticated]
+        return redirect("documents")
 
-    def get(self, request):
-        user = request.user
-        documents = Document.objects.filter(user_id=user)
-        serializer = DocumentSerializer(documents, many=True)
-        return Response(serializer.data)
+class RenameView(APIView):
+
+    def post(self, request):
+        
+        file_name, new_name = request.POST["filename"], request.POST["new_filename"]
+        target_file = Document.objects.filter(user_id=request.user, file_name = file_name)[0]  
+        target_file.file_name = new_name
+        target_file.save()
+
+        return redirect("documents")
 
 
 class ParagraphByKeyword(APIView):

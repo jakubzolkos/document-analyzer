@@ -64,9 +64,9 @@
                 <div class="form-content">
                     <header>Signup</header>
                     <form method="POST">
-                        
+                        {% csrf_token %}
                         <div class="field input-field">
-                            {% csrf_token %}
+                            
                             {{form.email}}
                         </div>
 
