@@ -54,9 +54,10 @@ class DocumentsView(APIView):
 
         threads = []
         for file in files:
-            thread = threading.Thread(target=save_doc, args=(file,))
-            thread.start()
-            threads.append(thread)
+            if not Document.objects.filter(user_id=user, file_name=str(file.name).split(".")[0]):
+                thread = threading.Thread(target=save_doc, args=(file,))
+                thread.start()
+                threads.append(thread)
 
         for thread in threads:
             thread.join()

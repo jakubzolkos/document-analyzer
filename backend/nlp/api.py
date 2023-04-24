@@ -1,58 +1,122 @@
-import textract
+import json
+import requests
+import re
 from PIL import Image
 import pytesseract
-import re
-import flair
-from flair.data import Sentence
-from flair.models import SequenceTagger
-flair.device = "cpu"  # Use CPU instead of GPU to save resources
+from bs4 import BeautifulSoup
+from textblob import TextBlob
+from PyPDF2 import PdfReader
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import wordnet
+from collections import defaultdict
+from sumy.summarizers.lsa import LsaSummarizer
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.utils import get_stop_words
 
 
-def extract_text(filename):
+class NLP:
+    
+    def __init__(self):
 
-    file_extension = filename.split('.')[-1].lower()
+        self.text = ''
+        self.summarized_text = ''
+        self.paragraphs = []
+        self.sentiments = []
+        self.definitions = defaultdict(str)
+        self.keywords = []
 
-    if file_extension == 'doc':
-        text = textract.process(filename, method='antiword').decode('utf-8')
-    elif file_extension == 'pdf':
-        text = textract.process(filename, method='pdfminer').decode('utf-8')
-    elif file_extension in ['jpg', 'jpeg', 'png', 'bmp', 'gif']:
-        img = Image.open(filename)
-        text = pytesseract.image_to_string(img)
-    else:
-        raise Exception('Unsupported file format')
+    def extract_text(self, file):
+        
+        extension = file.split('.')[-1]
 
-    # Clean text
-    text = re.sub(' +', ' ', text)
-    text = text.strip()  
-    text = re.sub(r'[^\w\s\.\'\",?!-]', '', text)
-    text = re.sub(r'\n{3,}', '\n', text)
+        if extension == 'pdf':
+            with open(file, 'rb') as f:
+                pdf_reader = PdfReader(f)
+                for page_num in range(len(pdf_reader.pages)):
+                    page = pdf_reader.pages[page_num]
+                    self.text += page.extract_text()
+        
+        elif extension in ['png', 'jpg']:
+            img = Image.open(file)
+            self.text = pytesseract.image_to_string(img)
 
-    return text
+        elif extension in ['doc', 'docx']:
+            with open(file, 'r') as f:
+                self.text = f.read()
+        
+        return self.text
+            
+    def clean_text(self):
+
+        self.text = re.sub('\n', '', self.text)
+        
+    def summarize_text(self, text, ratio=0.05):
+
+        language = 'english'
+        sentence_count = max(1, int(ratio * len(sent_tokenize(text))))
+        parser = PlaintextParser.from_string(text, Tokenizer(language))
+        summarizer = LsaSummarizer()
+        summarizer.stop_words = get_stop_words(language)
+        summary = []
+        for sentence in summarizer(parser.document, sentence_count):
+            summary.append(str(sentence))
+
+        self.summarized_text = '\n'.join(summary)
+        
+    def divide_into_paragraphs(self):
+        self.paragraphs = sent_tokenize(self.summarized_text)
+        
+    def perform_sentiment_analysis(self):
+        for paragraph in self.paragraphs:
+            blob = TextBlob(paragraph)
+            sentiment = blob.sentiment.polarity
+            self.sentiments.append(sentiment)
+            
+    def extract_definitions(self):
+        for word in word_tokenize(self.summarized_text):
+            synsets = wordnet.synsets(word)
+            if synsets:
+                definition = synsets[0].definition()
+                self.definitions[word] = definition
+        
+    def tag_keywords(self):
+        for word in word_tokenize(self.summarized_text):
+            synsets = wordnet.synsets(word)
+            if synsets:
+                self.keywords.append(word)
+        
+    def process_file(self, file_path):
+        
+        text = self.extract_text(file_path)
+        self.clean_text()
+        self.summarize_text(text)
+        self.divide_into_paragraphs()
+        self.perform_sentiment_analysis()
+        self.extract_definitions()
+        self.tag_keywords()
+        
+    def to_json(self, file_path=None):
+
+        json_dict = {
+
+            'text': self.text,
+            'summarized_text': self.summarized_text,
+            'paragraphs': self.paragraphs,
+            'sentiments': self.sentiments,
+            'definitions': self.definitions,
+            'keywords': self.keywords
+        }
+
+        if file_path is not None:
+            with open(file_path, 'w') as f:
+                json.dump(json_dict, f)
+
+        return json.dumps(json_dict)
 
 
-def divide_into_paragraphs(text):
-    # Divide text into paragraphs
-    return text.split('\n\n')
+nlp_tool = NLP()
+nlp_tool.process_file('/home/hyron/Desktop/UNI/CODING/bu/ec530/doc-analyzer/backend/media/applsci-10-08660.pdf')
+result_json = nlp_tool.to_json('output.json')
+print(result_json)
 
-
-def extract_named_entities(text):
-    # Load the NER model
-    ner = SequenceTagger.load('ner')
-
-    # Run the NER model on the input text
-    sentence = flair.data.Sentence(text)
-    ner.predict(sentence)
-
-    # Extract the named entities and their types
-    entities = []
-    for entity in sentence.get_spans('ner'):
-        entities.append((entity.text, entity.tag))
-
-    return ' '.join([entity[0] for entity in entities if entity[1] in ["ORG", "PER", "LOC"]])
-
-text = extract_text("/home/hyron/Desktop/UNI/CODING/bu/ec530/doc-analyzer/backend/media/jakub_zolkos_resume.pdf")
-# paragraphs = divide_into_paragraphs(text)
-# print(paragraphs)
-ents = extract_named_entities(extract_named_entities(text))
-print(ents)
