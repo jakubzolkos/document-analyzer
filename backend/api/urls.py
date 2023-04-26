@@ -16,6 +16,8 @@ urlpatterns = [
     path('api/delete/', DeleteView.as_view(), name='delete'),
     # Rename file
     path('api/rename/', RenameView.as_view(), name='rename'),
+    # Dictioanry
+    path('api/dictionary/', DefinitionByKeyword.as_view(), name='dictionary'),
     # Get all paragraphs with a given keyword 
     path('api/search?keyword=<keyword>', ParagraphByKeyword.as_view(), name='search_paragraph'),
     # Get a keyword definition

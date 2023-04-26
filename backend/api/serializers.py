@@ -1,4 +1,4 @@
-from rest_framework.serializers import Serializer, FileField, ReadOnlyField, SerializerMethodField, CharField
+from rest_framework.serializers import Serializer, FileField, ReadOnlyField, SerializerMethodField, CharField, DateTimeField
 from .models import Document
 
 
@@ -7,11 +7,12 @@ class DocumentSerializer(Serializer):
     file_name = CharField(max_length=200)
     file_type = CharField(max_length=200)
     file_size = SerializerMethodField()
+    created_at = DateTimeField()
 
     class Meta:
 
         model = Document
-        fields = ['file_name', 'file_type', 'file_size']
+        fields = ['file_name', 'file_type', 'file_size', 'created_at']
 
     def get_file_size(self, obj):
 

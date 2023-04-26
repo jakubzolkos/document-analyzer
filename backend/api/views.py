@@ -5,8 +5,9 @@ from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from .serializers import *
-from .models import Document
+from .models import *
 import queue
+import os
 import threading
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets
@@ -21,41 +22,84 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.files.storage import FileSystemStorage
 import time
+from datetime import datetime
 
 
 class DocumentsView(APIView):
 
     def get(self, request):
 
-        user = request.user
-        documents = Document.objects.filter(user_id=user)
-        paylod = DocumentSerializer(documents, many=True).data
-        return render(request, 'upload.html', context={'files': paylod})
+        documents = Document.objects.filter(user_id=request.user)
+        payload = DocumentSerializer(documents, many=True).data
+        return render(request, 'upload.html', context={'files': payload})
 
     def post(self, request):
 
-        user = request.user
-        files = request.FILES.getlist('files')
+        def save_data(file):
 
-        start_time = time.time()
-
-        # Function to handle uploading a single file
-        def save_doc(file):
-
+            # Obtain files and analysis
             storage = FileSystemStorage()
             filename = storage.save(file.name, file)
-            Document.objects.create(
-                user_id=user,
+            filepath = os.path.join("/home/hyron/Desktop/UNI/CODING/bu/ec530/doc-analyzer/backend/media", file.name)
+            from nlp.api import NLP_API
+            import json
+            nlp = NLP_API()
+            nlp.process_file(filepath)
+            analysis = json.loads(nlp.to_json())
+
+            # Create document
+            document = Document.objects.create(
+                user_id=request.user,
                 file_name=str(file.name).split(".")[0],
                 file_size=file.size,
                 file_type="." + str(file.name).split(".")[-1],
                 file_path=filename,
+                topic=analysis['topic'],
+                summary=analysis['summary'],
             )
+
+            for paragraph in analysis['paragraphs']:
+
+                new_paragraph = Paragraph.objects.create(
+
+                    doc_id=document,
+                    text=paragraph['text'],
+                    sentiment=paragraph['sentiment'],
+                )
+
+                for keyword, metadata in paragraph['keywords'].items():
+      
+                    if metadata is not None:
+                        
+                        try:
+                            word = Keyword.objects.get(word=keyword)
+                            
+                        except:
+
+                            word = Keyword(
+
+                            word=keyword,
+                            part_of_speech=metadata['part_of_speech'],
+                            definition=metadata['definition'],
+                            pronunciation=f"/{metadata['pronunciation']}/",
+                            example=metadata['example']
+                            ) 
+
+                            word.save()
+
+                        finally:   
+
+                            word.users.add(request.user)
+                            word.paragraphs.add(new_paragraph)
+                            word.save()
+                
+                
+        files = request.FILES.getlist('files')
 
         threads = []
         for file in files:
-            if not Document.objects.filter(user_id=user, file_name=str(file.name).split(".")[0]):
-                thread = threading.Thread(target=save_doc, args=(file,))
+            if not Document.objects.filter(user_id=request.user, file_name=str(file.name).split(".")[0]):
+                thread = threading.Thread(target=save_data, args=(file,))
                 thread.start()
                 threads.append(thread)
 
@@ -116,8 +160,21 @@ class DefinitionByKeyword(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        response = "Not implemented yet :)"
-        return Response(response)
+
+        query = request.GET.get('word')
+
+        # Filter keywords by authenticated user
+        user_keywords = Keyword.objects.filter(users=request.user)
+
+        # Apply the search query if provided
+        if query is not None:
+            user_keywords = user_keywords.filter(word=query)
+
+        # Order the results
+        user_keywords = user_keywords.order_by('word')
+
+        return render(request, 'dictionary.html', context={"keywords": user_keywords})
+
 
 
 class SummaryByDocID(APIView):

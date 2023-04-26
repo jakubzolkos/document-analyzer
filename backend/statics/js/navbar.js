@@ -1,7 +1,42 @@
 const shrink_btn = document.querySelector(".shrink-btn");
-const sidebar_links = document.querySelectorAll(".sidebar-links a");
-const active_tab = document.querySelector(".active-tab");
 const tooltip_elements = document.querySelectorAll(".tooltip-element");
+const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+const activeTab = document.querySelector('.active-tab');
+
+const myLink = document.getElementById('link');
+
+myLink.addEventListener('click', (e) => {
+  if (e.target.href === window.location.href) {
+    e.preventDefault();
+  }
+});
+
+// Function to update the active tab position
+function updateActiveTab() {
+  sidebarLinks.forEach((link, index) => {
+    if (link.classList.contains('active')) {
+      activeTab.style.top = `${2.5 + 58 * index}px`;
+    }
+  });
+}
+
+// Update the active tab position initially
+updateActiveTab();
+
+// Add click event listeners to sidebar links
+sidebarLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    // Remove 'active' class from all links
+    sidebarLinks.forEach(link => link.classList.remove('active'));
+    
+    // Add 'active' class to the clicked link
+    link.classList.add('active');
+    
+    // Update the active tab position
+    updateActiveTab();
+  });
+});
+
 
 let activeIndex;
 
@@ -16,20 +51,23 @@ shrink_btn.addEventListener("click", () => {
   }, 500);
 });
 
+// function moveActiveTab() {
+//   const activeLink = document.querySelector(".sidebar-links a.active");
+//   if (activeLink) {
+//     activeIndex = Array.from(sidebar_links).indexOf(activeLink);
+//     let topPosition = activeIndex * 58 + 2.5;
+//     active_tab.style.top = `${topPosition}px`;
+//   }
+// }
 
-function moveActiveTab() {
-  let topPosition = activeIndex * 58 + 2.5;
-  active_tab.style.top = `${topPosition}px`;
-}
+// function changeLink() {
+//   sidebar_links.forEach((sideLink) => sideLink.classList.remove("active"));
+//   this.classList.add("active");
 
-function changeLink() {
-  sidebar_links.forEach((sideLink) => sideLink.classList.remove("active"));
-  this.classList.add("active");
+//   activeIndex = this.dataset.active;
 
-  activeIndex = this.dataset.active;
-
-  moveActiveTab();
-}
+//   moveActiveTab();
+// }
 
 sidebar_links.forEach((link) => link.addEventListener("click", changeLink));
 
@@ -47,3 +85,5 @@ function showTooltip() {
 tooltip_elements.forEach((elem) => {
   elem.addEventListener("mouseover", showTooltip);
 });
+
+// document.addEventListener("DOMContentLoaded", moveActiveTab);

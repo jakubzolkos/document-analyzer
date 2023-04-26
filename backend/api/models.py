@@ -1,6 +1,7 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from django.conf import settings
+from datetime import datetime
 
 
 class Document(models.Model):
@@ -10,7 +11,7 @@ class Document(models.Model):
         on_delete=models.CASCADE,
         null=False,
         blank=False)
-    
+        
     url = models.CharField(
         max_length=255, 
         null=True, 
@@ -70,74 +71,91 @@ class Paragraph(models.Model):
 
 
 class Keyword(models.Model):
-    
-    paragraph_id = models.ForeignKey(
-        Paragraph, 
-        on_delete=models.CASCADE,
-        null=True,
+
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='keywords',
         blank=True
     )
+    
+    paragraphs = models.ManyToManyField(
+        Paragraph,
+        related_name='keywords',
+        blank=True
+    )
+    
+    word = models.CharField(
+        max_length=100,
+        unique=True
+    )
 
-    name = models.CharField(
-        max_length=100
+    part_of_speech = models.TextField(
+        null=True
     )
 
     definition = models.TextField()
 
-
-class Institution(models.Model):
-
-    paragraph_id = models.ForeignKey(
-        Paragraph, 
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
+    pronunciation = models.TextField(
+        null=True
     )
 
-    name = models.CharField(
-        max_length=100
+    example = models.TextField(
+        null=True
     )
 
+# class Institution(models.Model):
 
-class Name(models.Model):
+#     paragraph_id = models.ForeignKey(
+#         Paragraph, 
+#         on_delete=models.CASCADE,
+#         null=True,
+#         blank=True
+#     )
+
+#     name = models.CharField(
+#         max_length=100
+#     )
+
+
+# class Name(models.Model):
     
-    paragraph_id = models.ForeignKey(
-        Paragraph, 
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+#     paragraph_id = models.ForeignKey(
+#         Paragraph, 
+#         on_delete=models.CASCADE,
+#         null=True,
+#         blank=True
+#     )
 
-    name = models.CharField(
-        max_length=100
-    )
+#     name = models.CharField(
+#         max_length=100
+#     )
 
 
-class Location(models.Model):
+# class Location(models.Model):
     
-    paragraph_id = models.ForeignKey(
-        Paragraph, 
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+#     paragraph_id = models.ForeignKey(
+#         Paragraph, 
+#         on_delete=models.CASCADE,
+#         null=True,
+#         blank=True
+#     )
 
-    name = models.CharField(
-        max_length=100
-    )
+#     name = models.CharField(
+#         max_length=100
+#     )
 
 
-class Address(models.Model):
+# class Address(models.Model):
     
-    paragraph_id = models.ForeignKey(
-        Paragraph, 
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+#     paragraph_id = models.ForeignKey(
+#         Paragraph, 
+#         on_delete=models.CASCADE,
+#         null=True,
+#         blank=True
+#     )
 
-    name = models.CharField(
-        max_length=100
-    )
+#     name = models.CharField(
+#         max_length=100
+#     )
 
 

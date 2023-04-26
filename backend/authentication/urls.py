@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import LoginView, LogoutView, HomeView
+from api.views import DocumentsView
 
 
 urlpatterns = [
@@ -9,5 +10,5 @@ urlpatterns = [
     # Logout of the account
     path('logout/', LogoutView.as_view(), name='account_logout'),
     # Home view for users who logged in successfuly
-    path('dashboard/', HomeView.as_view(), name='home'),
+    path('dashboard/', DocumentsView.as_view(), name='home'),
 ]

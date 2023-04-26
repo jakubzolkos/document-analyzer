@@ -10,6 +10,16 @@
   <title>Doctor</title>
   <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}">
+  <script>
+    document.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A' && e.target.hasAttribute('data-prevent-reload')) {
+        const href = e.target.getAttribute('href');
+        if (href === window.location.hash || href === '#') {
+          e.preventDefault();
+        }
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -18,21 +28,14 @@
       <span class="shrink-btn">
         <i class='bx bx-chevron-left'></i>
       </span>
-      <!-- <img src="./img/logo.png" class="logo" alt=""> -->
-      <!-- <h2 class="hide">DOCTOR</h3> -->
     </div>
-
-    <!-- <div class="search">
-      <i class='bx bx-search'></i>
-      <input type="text" class="hide" placeholder="Quick Search ...">
-    </div> -->
 
     <div class="sidebar-links">
       <ul>
         {% csrf_token %}
         <div class="active-tab"></div>
         <li class="tooltip-element" data-tooltip="0">
-          <a href="/api/upload" class="active" data-active="0">
+          <a href="/api/upload" id='link' data-prevent-reload {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'documents' %} class="active" {% endif %} data-active="0">
             <div class="icon">
               <i class='bx bx-folder'></i>
               <i class='bx bxs-folder'></i>
@@ -41,7 +44,7 @@
           </a>
         </li>
         <li class="tooltip-element" data-tooltip="1">
-          <a href="#" data-active="1">
+          <a href="#" id='link' data-active="1">
             <div class="icon">
               <i class='bx bx-bar-chart-square'></i>
               <i class='bx bxs-bar-chart-square'></i>
@@ -50,7 +53,7 @@
           </a>
         </li>
         <li class="tooltip-element" data-tooltip="2">
-            <a href="#" data-active="2">
+            <a href="{% url 'dictionary' %}" id='link' {% if request.resolver_match.url_name == 'dictionary' %} class="active" {% endif %} data-active="2">
               <div class="icon">
                 <i class='bx bx-notepad'></i>
                 <i class='bx bxs-notepad'></i>
@@ -59,7 +62,7 @@
             </a>
           </li>
           <li class="tooltip-element" data-tooltip="3">
-            <a href="#" data-active="3">
+            <a href="#" id='link' data-active="3">
               <div class="icon">
                 <i class='bx bx-cog'></i>
                 <i class='bx bxs-cog'></i>
@@ -68,7 +71,7 @@
             </a>
           </li>
           <li class="tooltip-element" data-tooltip="4">
-            <a href="#" data-active="4">
+            <a href="#" id='link' data-active="4">
               <div class="icon">
                 <i class='bx bx-help-circle'></i>
                 <i class='bx bxs-help-circle'></i>
@@ -117,6 +120,8 @@
 {% block content %}
 
 {% endblock %}
+
+
 </body>
 
 </html>

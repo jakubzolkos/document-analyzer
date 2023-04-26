@@ -18,6 +18,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script> 
     <script src="{% static 'js/upload.js' %}"></script>
     <script src="{% static 'js/navbar.js' %}"></script>
+   
 </head>
 
 <body>
@@ -27,15 +28,37 @@
                 <div class="table-title">
                     <div class="row">
                         <div class="col-sm-6">
-                          
                             <form id='form' method='POST' action="" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="btn btn-success" onclick="document.querySelector('input[name=\'files\']').click();">
-                                    <input accept=".pdf,.doc,.docx,.png,.jpg" style="display: none;" onchange="this.form.submit()" class="form-control-file" required name="files" type="file" multiple>
+                                    <input accept=".pdf,.doc,.docx,.png,.jpg" style="display: none;" class="form-control-file" required name="files" type="file" multiple>
                                     <i class="material-icons">&#xE147;</i> 
                                     <span>Add Files</span>
                                 </div>
                             </form>
+                            
+                            <script>
+                                document.querySelector('input[name="files"]').addEventListener('change', function () {
+                                  if (this.files.length > 0) {
+                                    document.getElementById('form').submit();
+                                  }
+                                });
+                            </script>     
+                              
+                            <div class="modal" tabindex="-1" role="dialog" id="upload-progress-modal">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                  <div class="modal-content">
+                                    <div class="modal-header">
+                                      <h5 class="modal-title">Uploading Files</h5>
+                                    </div>
+                                    <div class="modal-body">
+                                      <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                         </div>
                     </div>
                 </div>
@@ -57,7 +80,7 @@
                             <td>{{file.file_name}}</td>
                             <td>{{file.file_type}}</td>
                             <td>{{file.file_size}}</td>
-                            <td>26-01-2023-13:51:23</td>
+                            <td>{{file.created_at}}</td>
                             <td>
                                 <a href="#edit_file{{forloop.counter}}" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
                                 
@@ -118,6 +141,44 @@
             </div>
         </div>        
     </div>
+    <script>
+        document.getElementById('form').addEventListener('submit', function (event) {
+          // Prevent the default form submission
+          event.preventDefault();
+      
+          // Display the modal window
+          $('#upload-progress-modal').modal('show');
+      
+          // Get the form data and submit it using AJAX
+          var formData = new FormData(event.target);
+          var request = new XMLHttpRequest();
+      
+          request.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+              var percentComplete = Math.round((e.loaded / e.total) * 100);
+              var progressBar = document.querySelector('#upload-progress-modal .progress-bar');
+              progressBar.style.width = percentComplete + '%';
+              progressBar.setAttribute('aria-valuenow', percentComplete);
+            }
+          });
+      
+          request.addEventListener('load', function (e) {
+            // Hide the modal window
+            $('#upload-progress-modal').modal('hide');
+      
+            // Handle the response from the server
+            if (request.status >= 200 && request.status < 400) {
+              // Success - do something with the response
+            } else {
+              // Error - display an error message or handle it accordingly
+            }
+          });
+      
+          request.open('POST', event.target.action);
+          request.setRequestHeader('X-CSRFToken', formData.get('csrfmiddlewaretoken'));
+          request.send(formData);
+        });
+      </script>    
 </body>
 </html>
 
