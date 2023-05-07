@@ -66,7 +66,7 @@ After opening the server, you can sign-up with a new account or log into an exis
 
 
 ## Standalone NLP API
-While the application uses a generic implementation of the natural language processing functionalities, an API is also available for users who want to use them in external applications. You can find the API in the nlpapi.py file. This API provides a set of endpoints for processing and analyzing documents. The supported file formats include PDF, JPG, PNG, DOC, and DOCX. Functionalities:
+While the application uses a generic implementation of the natural language processing functionalities, an API is also available for users who want to use them in external applications. You can find the API in the nlpapi.py file. This API provides a set of endpoints for processing and analyzing documents. The supported file formats include PDF, JPG, PNG, DOC, and DOCX. Many of the endpoints support an optional text argument that allows performing analysis on text string data instead of a file. This allows for easy use of different analysis combinations. Functionalities:
 
 - Extract text from a document
 - Extract the main topic of a document
@@ -103,7 +103,7 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **URL**: `/extract_topic/`
 - **Method**: `POST`
 - **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data], num_topics=[int], num_words=[int]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], num_topics=[int], num_words=[int]`
 - **Success Response**: `{"topic": ["word1", "word2", "word3"]}`
 
 #### Summarize Text
@@ -111,10 +111,10 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **URL**: `/summarize_text/`
 - **Method**: `POST`
 - **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data], per=[float]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], per=[float]`
 - **Success Response**: `{"summary": "Text summary"}`
 
-#### Extract Definitions
+#### Extract Definitionsg
 
 - **URL**: `/extract_definitions/`
 - **Method**: `GET`
@@ -127,7 +127,7 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **URL**: `/perform_sentiment_analysis/`
 - **Method**: `POST`
 - **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
 - **Success Response**: `{"sentiments": ["Very Positive", "Neutral", "Negative"]}`
 
 #### Divide into Paragraphs
@@ -135,7 +135,7 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **URL**: `/divide_into_paragraphs/`
 - **Method**: `POST`
 - **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
 - **Success Response**: `{"paragraphs": ["Paragraph 1", "Paragraph 2", "Paragraph 3"]}`
 
 #### Tag Keywords
@@ -143,7 +143,7 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **URL**: `/tag_keywords/`
 - **Method**: `POST`
 - **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
 - **Success Response**: `{"keywords": [["word1", "word2"], ["word3", "word4"], ["word5", "word6"]]}`
 
 #### Process File
@@ -153,14 +153,6 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 - **Authentication**: `Token`
 - **Data Params**: `file=[multipart/form-data]`
 - **Success Response**: `{"topic": "Main topic", "summary": "Text summary", "paragraphs": [{"text": "Paragraph 1", "sentiment": "Very Positive", "keywords": ["word1", "word2"]}, {"text": "Paragraph 2", "sentiment": "Neutral", "keywords": ["word3", "word4"]}, {"text": "Paragraph 3", "sentiment": "Negative", "keywords": ["word5", "word6"]}]}`
-
-#### To JSON
-
-- **URL**: `/to_json/`
-- **Method**: `POST`
-- **Authentication**: `Token`
-- **Data Params**: `file=[multipart/form-data], data=[string], file_path=[string]`
-- **Success Response**: `{"filename": "output.json"}`
 
 
 ### Example Usage
