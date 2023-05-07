@@ -27,8 +27,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from gensim import corpora
 from typing import List
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
-from datetime import datetime, timedelta
+
 
 nltk.download('wordnet')
 nltk.download('cmudict')
@@ -42,7 +41,7 @@ class DivideIntoParagraphsResponse(BaseModel):
     paragraphs: List[str]
 
 class TagKeywordsResponse(BaseModel):
-    keywords: List[Dict[str, Dict]]
+    paragraph_keywords: Dict[str, List[str]]
 
 class ProcessFileResponse(BaseModel):
     topic: List[str]
@@ -66,7 +65,6 @@ class ExtractDefinitionsResponse(BaseModel):
 
 class SentimentAnalysisResponse(BaseModel):
     sentiment: str
-    description: str
 
 class Token(BaseModel):
     access_token: str
@@ -74,6 +72,58 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str
+
+
+@app.get("/extract_definitions/", response_model=ExtractDefinitionsResponse)
+async def extract_definitions(word: str):
+
+    if word is None:
+        raise HTTPException(status_code=400, detail="No input")
+
+    def pos_to_human_readable(pos_tag):
+        if pos_tag == 'n':
+            return 'noun'
+        elif pos_tag == 'v':
+            return 'verb'
+        elif pos_tag == 'a':
+            return 'adjective'
+        elif pos_tag == 's':
+            return 'adjective satellite'
+        elif pos_tag == 'r':
+            return 'adverb'
+        else:
+            return 'unknown'
+
+    def get_example_sentence(keyword, pos):
+
+        from nltk.corpus import brown
+        tagged_sentences = brown.tagged_sents(categories='news')
+
+        for sent in tagged_sentences:
+            for idx, (token, tag) in enumerate(sent):
+                if token.lower() == keyword.lower() and pos_to_human_readable(tag[0].lower()) == pos:
+                    return ' '.join([token for token, _ in sent])
+
+        return 'No example available'
+
+    synsets = wordnet.synsets(word)
+
+    try:
+        if synsets:
+            definition = synsets[0].definition()
+            pos = pos_to_human_readable(synsets[0].pos())
+            pronunciation = ipa.convert(word)
+            example = get_example_sentence(word, pos)
+
+            return {
+                'part_of_speech': pos,
+                'definition': definition,
+                'pronunciation': pronunciation,
+                'example': example
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Could not obtain word definition")
 
 
 @app.post("/extract_text/", response_model=ExtractTextResponse)
@@ -124,14 +174,23 @@ async def extract_text(file: UploadFile = File(...)):
         
 
 @app.post("/extract_topic/", response_model=ExtractTopicResponse)
-async def extract_topic(file: UploadFile = File(...), num_topics: Optional[int] = 1, num_words: Optional[int] = 3):
+async def extract_topic(file: Optional[UploadFile] = File(None), text: Optional[str] = None, num_topics: Optional[int] = 1, num_words: Optional[int] = 3):
+    
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
+    
+    if file and text:
+        raise HTTPException(status_code=400, detail="Can't process both file and text at the same time")
+    
+    if file and not text:
+        try:
+            text = await extract_text(file)
+        except HTTPException as e:
+            raise e
 
-    try:
-        text = await extract_text(file)
-    except HTTPException as e:
-        raise e
+        text = text['text']
 
-    text = text['text']
+
     stop_words = set(stopwords.words("english"))
     words = word_tokenize(text)
         
@@ -158,14 +217,24 @@ async def extract_topic(file: UploadFile = File(...), num_topics: Optional[int] 
 
 
 @app.post("/summarize_text/", response_model=SummarizeTextResponse)
-async def summarize_text(file: UploadFile = File(...), per: Optional[float] = 0.1):
+async def summarize_text(file: Optional[UploadFile] = File(None), text: Optional[str] = None, per: Optional[float] = 0.1):
+    
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
+    
+    if file and text:
+        raise HTTPException(status_code=400, detail="Can't process both file and text at the same time")
+    
+    if file and not text:
+        try:
+            text = await extract_text(file)
+        except HTTPException as e:
+            raise e
 
-    try:
-        text = await extract_text(file)
-    except HTTPException as e:
-        raise e
+        text = text['text']
 
-    text = text['text']
+    if not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
 
     nlp = spacy.load('en_core_web_sm')
     doc = nlp(text)
@@ -201,7 +270,21 @@ async def summarize_text(file: UploadFile = File(...), per: Optional[float] = 0.
 
 
 @app.post("/sentiment_analysis/", response_model=SentimentAnalysisResponse)
-async def sentiment_analysis(text: str):
+async def sentiment_analysis(file: Optional[UploadFile] = File(None), text: Optional[str] = None):
+
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
+    
+    if file and text:
+        raise HTTPException(status_code=400, detail="Can't process both file and text at the same time")
+    
+    if file and not text:
+        try:
+            text = await extract_text(file)
+        except HTTPException as e:
+            raise e
+
+        text = text['text']
 
     def get_sentiment_description(score):
         if score >= 0.5:
@@ -219,143 +302,114 @@ async def sentiment_analysis(text: str):
     sentiment_score = sia.polarity_scores(text)['compound']
     sentiment = get_sentiment_description(sentiment_score)
 
-    return {"sentiment": sentiment, "description": f"The sentiment of the given text is {sentiment}"}
-
-
-@app.get("/extract_definitions/", response_model=ExtractDefinitionsResponse)
-async def extract_definitions(word: str):
-
-    def pos_to_human_readable(pos_tag):
-        if pos_tag == 'n':
-            return 'noun'
-        elif pos_tag == 'v':
-            return 'verb'
-        elif pos_tag == 'a':
-            return 'adjective'
-        elif pos_tag == 's':
-            return 'adjective satellite'
-        elif pos_tag == 'r':
-            return 'adverb'
-        else:
-            return 'unknown'
-
-    def get_example_sentence(keyword, pos):
-
-        from nltk.corpus import brown
-        tagged_sentences = brown.tagged_sents(categories='news')
-
-        for sent in tagged_sentences:
-            for idx, (token, tag) in enumerate(sent):
-                if token.lower() == keyword.lower() and pos_to_human_readable(tag[0].lower()) == pos:
-                    return ' '.join([token for token, _ in sent])
-
-        return 'No example available'
-
-    synsets = wordnet.synsets(word)
-
-    if synsets:
-        definition = synsets[0].definition()
-        pos = pos_to_human_readable(synsets[0].pos())
-        pronunciation = ipa.convert(word)
-        example = get_example_sentence(word, pos)
-
-        return {
-            'part_of_speech': pos,
-            'definition': definition,
-            'pronunciation': pronunciation,
-            'example': example
-        }
+    return {"sentiment": sentiment}
 
 
 @app.post("/divide_into_paragraphs/", response_model=DivideIntoParagraphsResponse)
-async def divide_into_paragraphs(text: str):
+async def divide_into_paragraphs(file: Optional[UploadFile] = File(None), text: Optional[str] = None):
+
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
+    
+    if file and text:
+        raise HTTPException(status_code=400, detail="Can't process both file and text at the same time")
+    
+    if file and not text:
+        try:
+            text = await extract_text(file)
+        except HTTPException as e:
+            raise e
+
+        text = text['text']
+
     paragraphs = re.split('\n\n|\n\t|\n', text)
     return {"paragraphs": paragraphs}
 
 
 @app.post("/tag_keywords/", response_model=TagKeywordsResponse)
-async def tag_keywords(paragraphs: List[str]):
+async def tag_keywords(file: Optional[UploadFile] = File(None), text: Optional[List[str]] = None):
+
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="Please provide either a file or text")
+    
+    if file and text:
+        raise HTTPException(status_code=400, detail="Can't process both file and text at the same time")
+    
+    if file and not text:
+        try:
+            text = await extract_text(file)
+        except HTTPException as e:
+            raise e
+
+        text = text['text']
+        text = re.split('\n\n|\n\t|\n', text)
 
     def is_number_string(s):
-            return s.replace('.', '', 1).isdigit()
-    
+        return s.replace('.', '', 1).isdigit()
+
     def get_keywords(paragraph, num_keywords):
+        try:
+            stop_words = list(set(stopwords.words("english")))
+            vectorizer = TfidfVectorizer(stop_words=stop_words, token_pattern=r'(?u)\b[A-Za-z]+\b')
+            tfidf_matrix = vectorizer.fit_transform([paragraph])
+            feature_names = vectorizer.get_feature_names_out()
+            importance = tfidf_matrix.toarray()[0]
 
-            try:
-                stop_words = list(set(stopwords.words("english")))
-                vectorizer = TfidfVectorizer(stop_words=stop_words, token_pattern=r'(?u)\b[A-Za-z]+\b')
-                tfidf_matrix = vectorizer.fit_transform([paragraph])
-                feature_names = vectorizer.get_feature_names_out()
-                importance = tfidf_matrix.toarray()[0]
+            # Use a heap to store the top N keywords
+            top_keywords = []
 
-                # Use a heap to store the top N keywords
-                top_keywords = []
+            import heapq
+            for index, value in enumerate(importance):
+                word = feature_names[index]
+                if not is_number_string(word):
+                    if len(top_keywords) < num_keywords:
+                        heapq.heappush(top_keywords, (value, word))
+                    else:
+                        heapq.heappushpop(top_keywords, (value, word))
 
-                import heapq
-                for index, value in enumerate(importance):
-                    word = feature_names[index]
-                    if not is_number_string(word):
-                        if len(top_keywords) < num_keywords:
-                            heapq.heappush(top_keywords, (value, word))
-                        else:
-                            heapq.heappushpop(top_keywords, (value, word))
+            # Extract keywords from the heap
+            return [word for _, word in sorted(top_keywords, reverse=True)]
 
-                # Extract keywords from the heap
-                return [word for _, word in sorted(top_keywords, reverse=True)]
-            
-            except ValueError:
-                return []
+        except ValueError:
+            return []
 
-    paragraph_keywords = []
-
-    for paragraph in paragraphs:
+    paragraph_keywords = {}
+    for paragraph in text:
         paragraph_length = len(word_tokenize(paragraph))
         num_keywords = min(max(paragraph_length // 10, 2), 5)
         keywords = get_keywords(paragraph, num_keywords)
-        paragraph_keywords.append({keyword: await extract_definitions(keyword) for keyword in keywords})
+        paragraph_keywords[paragraph] = keywords
 
-    return {"keywords": paragraph_keywords}
+    return {"paragraph_keywords": paragraph_keywords}
 
 
 @app.post("/process_file/", response_model=ProcessFileResponse)
 async def process_file(file: UploadFile = File(...)):
-    
+
     text = (await extract_text(file))["text"]
-    summary = (await summarize_text(file))["summary"]
-    topic = (await extract_topic(file))["topic"]
+    summary = (await summarize_text(file=None, text=text))["summary"]
+    topic = (await extract_topic(file=None, text=text))["topic"]
 
     paragraphs = re.split('\n\n|\n\t|\n', text)
-    sentiments = []  # Perform sentiment analysis and store the result in this list
-
-
-    def get_sentiment_description(score):
-
-            if score >= 0.5:
-                return "Very Positive"
-            elif score > 0.1:
-                return "Positive"
-            elif score > -0.1:
-                return "Neutral"
-            elif score > -0.5:
-                return "Negative"
-            else:
-                return "Very Negative"
 
     # Perform sentiment analysis
-    sia = SentimentIntensityAnalyzer()
+    sentiments = []
     for paragraph in paragraphs:
-        sentiment_score = sia.polarity_scores(paragraph)['compound']
-        sentiment = get_sentiment_description(sentiment_score)
-        sentiments.append(sentiment)
+        sentiment_response = await sentiment_analysis(file=None, text=paragraph)
+        sentiments.append(sentiment_response["sentiment"])
 
     # Tag keywords
-    paragraph_keywords = await tag_keywords(paragraphs)
-
+    paragraph_keywords = await tag_keywords(file=None, text=paragraphs)
+ 
     # Prepare the final response
     result = {
         "topic": topic,
         "summary": summary,
-        "paragraphs": [{"text": p, "sentiment": s, "keywords": k} for p, s, k in zip(paragraphs, sentiments, paragraph_keywords["keywords"])]
+        "paragraphs": [{"text": p, "sentiment": s, "keywords": k} for p, s, k in zip(paragraphs, sentiments, paragraph_keywords["paragraph_keywords"].values())]
     }
+
+    for element in result["paragraphs"]:
+        keys = {keyword: await extract_definitions(keyword) for keyword in element["keywords"]}
+        element["keywords"] = keys
 
     return result

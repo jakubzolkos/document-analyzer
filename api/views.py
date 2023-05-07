@@ -26,7 +26,6 @@ from datetime import datetime
 from fuzzywuzzy import process
 
 
-
 class DocumentsView(APIView):
 
     permission_classes = [IsAuthenticated]
@@ -44,7 +43,7 @@ class DocumentsView(APIView):
             # Obtain files and analysis
             storage = FileSystemStorage()
             filename = storage.save(file.name, file)
-            filepath = os.path.join("/home/hyron/Desktop/UNI/CODING/bu/ec530/doc-analyzer/media", file.name)
+            filepath = os.path.join(os.getcwd(), "media", file.name)
             from nlp.api import NLP_API
             import json
             nlp = NLP_API()
@@ -99,16 +98,19 @@ class DocumentsView(APIView):
                 
                 
         files = request.FILES.getlist('files')
+        if len(files) > 1:
+            threads = []
+            for file in files:
+                if not Document.objects.filter(user_id=request.user, file_name=str(file.name).split(".")[0]):
+                    thread = threading.Thread(target=save_data, args=(file,))
+                    thread.start()
+                    threads.append(thread)
 
-        threads = []
-        for file in files:
-            if not Document.objects.filter(user_id=request.user, file_name=str(file.name).split(".")[0]):
-                thread = threading.Thread(target=save_data, args=(file,))
-                thread.start()
-                threads.append(thread)
+            for thread in threads:
+                thread.join()
 
-        for thread in threads:
-            thread.join()
+        else:
+            save_data(files[0])
 
         return self.get(request)
 
@@ -188,28 +190,6 @@ class AnalyticsView(APIView):
         return render(request, 'analytics.html')
 
 
-class ParagraphByKeyword(APIView):
-    """ 
-    Finds all paragraphs that contain a given keyword
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        response = "Not implemented yet :)"
-        return Response(response)
-
-
-class ParagraphBySentiment(APIView):
-    """ 
-    Finds all paragraphs with a given sentiment
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        response = "Not implemented yet :)"
-        return Response(response)
-
-
 class DefinitionByKeyword(APIView):
     """
     Returns the definition of the input keyword
@@ -245,6 +225,26 @@ class DefinitionByKeyword(APIView):
         return render(request, 'dictionary.html', context={"keywords": user_keywords})
 
 
+class ParagraphByKeyword(APIView):
+    """ 
+    Finds all paragraphs that contain a given keyword
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        response = "Not implemented yet :)"
+        return Response(response)
+
+
+class ParagraphBySentiment(APIView):
+    """ 
+    Finds all paragraphs with a given sentiment
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        response = "Not implemented yet :)"
+        return Response(response)
 
 class SummaryByDocID(APIView):
     """ 

@@ -71,27 +71,32 @@ class NLP_API:
 
     def extract_topic(self, text, num_topics=1, num_words=3):
 
-        stop_words = set(stopwords.words("english"))
-        words = word_tokenize(text)
+        try:
+            stop_words = set(stopwords.words("english"))
+            words = word_tokenize(text)
+                
+            # Filter words for nouns and adjectives only
+            tagged_words = nltk.pos_tag(words)
+            valid_tags = ('NN', 'NNS', 'JJ', 'JJR', 'JJS')
+            words = [word.lower() for word, pos in tagged_words if word.isalnum() and pos in valid_tags and word not in stop_words]
             
-        # Filter words for nouns and adjectives only
-        tagged_words = nltk.pos_tag(words)
-        valid_tags = ('NN', 'NNS', 'JJ', 'JJR', 'JJS')
-        words = [word.lower() for word, pos in tagged_words if word.isalnum() and pos in valid_tags and word not in stop_words]
-        
-        # Lemmatize words
-        lemmatizer = WordNetLemmatizer()
-        words = [lemmatizer.lemmatize(word) for word in words]
-        
-        # Create a dictionary and a corpus
-        dictionary = corpora.Dictionary([words])
-        corpus = [dictionary.doc2bow([word]) for word in words]
-        
-        # Train an LDA model and extract topic words
-        lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=15)
-        topic_words = lda_model.show_topics(num_topics=num_topics, num_words=num_words, formatted=False)
+            # Lemmatize words
+            lemmatizer = WordNetLemmatizer()
+            words = [lemmatizer.lemmatize(word) for word in words]
+            
+            # Create a dictionary and a corpus
+            dictionary = corpora.Dictionary([words])
+            corpus = [dictionary.doc2bow([word]) for word in words]
+            
+            # Train an LDA model and extract topic words
+            lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=15)
+            topic_words = lda_model.show_topics(num_topics=num_topics, num_words=num_words, formatted=False)
 
-        self.topic = [word[0].capitalize() for word in topic_words[0][1]]
+            self.topic = [word[0].capitalize() for word in topic_words[0][1]]
+        
+        except ValueError as e:
+            print(e)
+            self.topic = ["Uknown"]
             
 
     def summarize_text(self, text, per = 0.1):
@@ -108,7 +113,7 @@ class NLP_API:
                     else:
                         word_frequencies[word.text] += 1
 
-        max_frequency = max(word_frequencies.values())
+        max_frequency = max(word_frequencies.values()) if word_frequencies else 0
         for word in word_frequencies.keys():
             word_frequencies[word]=word_frequencies[word] / max_frequency
 
