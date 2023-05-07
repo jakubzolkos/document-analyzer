@@ -4,32 +4,17 @@ Written by Jakub Zolkos for EC 530: Software Engineering Principles
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Installation](#installation)
 - [Database](#database)
+- [Installation](#installation)
+- [Application Usage](#apptutorial)
+- [Standalone NLP API](#nlpapi)
+- [Not Yet Implemented](#issues)
+
+
 
 
 ## Introduction
 Document analyzer API that provides multiple text analysis features. Written using Django REST Framework.
-
-
-## Installation
-1. Clone the repository
-```
-git clone https://github.com/ECE530-2023/unit-test-jakubzolkos
-```
-2. Install virtual environment (if not installed already)
-```
-pip install virtualenv
-```
-3. Create and activate virtual environment
-```
-virtualenv venv
-source venv/bin/activate
-```
-4. Install prerequisites
-```
-pip install -r requirements.txt
-```
 
 ## Database
 
@@ -52,3 +37,141 @@ Database design is a crucial factor when implementing any web application. The m
 - Keyword tables with names and definitions obtained from external website - creating a new document will mark each paragraph within a document with appropriate keyword tags
 
 ![Database](https://github.com/ECE530-2023/news-analyzer-jakubzolkos/blob/main/backend/assets/database.png)
+
+## Installation
+1. Clone the repository
+```
+git clone https://github.com/ECE530-2023/unit-test-jakubzolkos
+```
+2. Install virtual environment (if not installed already)
+```
+pip install virtualenv
+```
+3. Create and activate virtual environment
+```
+virtualenv venv
+source venv/bin/activate
+```
+4. Install prerequisites
+```
+pip install -r requirements.txt
+```
+6. Navigate to the root folder and run the application server
+```
+python3 manage.py runserver
+```
+
+## Application Usage Tutorial
+After opening the server, you can sign-up with a new account or log into an existing account. A custom authorization model is used that enables registering new users with only an email address and a password (authentication/models.py). The Google authentication and password recovery options are currently unavailable. Authenticated user will obtain a session token that lasts 30 minutes, unless the user logs out of the account and deletes browser cookies. 
+
+
+## Standalone NLP API
+While the application uses a generic implementation of the natural language processing functionalities, an API is also available for users who want to use them in external applications. You can find the API in the nlpapi.py file. This API provides a set of endpoints for processing and analyzing documents. The supported file formats include PDF, JPG, PNG, DOC, and DOCX. Functionalities:
+
+- Extract text from a document
+- Extract the main topic of a document
+- Summarize a document
+- Extract definitions for a given word
+- Perform sentiment analysis
+
+### Installation
+
+To run the FastAPI application, install FastAPI and an ASGI server like Uvicorn with the following command:
+```
+pip3 install fastapi uvicorn
+```
+### Running the API
+
+Save your FastAPI application code in a Python file, e.g., main.py. Then, open a terminal or command prompt, navigate to the directory containing main.py, and run the following command:
+```
+uvicorn nlpapi:app --reload
+```
+By default, the API will be accessible at http://127.0.0.1:8000. You can view the interactive API documentation at http://127.0.0.1:8000/docs.
+
+### Endpoints
+
+#### Extract Text
+
+- **URL**: `/extract_text/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data]`
+- **Success Response**: `{"text": "Extracted text"}`
+
+#### Extract Topic
+
+- **URL**: `/extract_topic/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data], num_topics=[int], num_words=[int]`
+- **Success Response**: `{"topic": ["word1", "word2", "word3"]}`
+
+#### Summarize Text
+
+- **URL**: `/summarize_text/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data], per=[float]`
+- **Success Response**: `{"summary": "Text summary"}`
+
+#### Extract Definitions
+
+- **URL**: `/extract_definitions/`
+- **Method**: `GET`
+- **Authentication**: `Token`
+- **Query Params**: `word=[string]`
+- **Success Response**: `{"part_of_speech": "noun", "definition": "A brief description", "pronunciation": "example", "example": "An example sentence"}`
+
+#### Perform Sentiment Analysis
+
+- **URL**: `/perform_sentiment_analysis/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data]`
+- **Success Response**: `{"sentiments": ["Very Positive", "Neutral", "Negative"]}`
+
+#### Divide into Paragraphs
+
+- **URL**: `/divide_into_paragraphs/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data]`
+- **Success Response**: `{"paragraphs": ["Paragraph 1", "Paragraph 2", "Paragraph 3"]}`
+
+#### Tag Keywords
+
+- **URL**: `/tag_keywords/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data]`
+- **Success Response**: `{"keywords": [["word1", "word2"], ["word3", "word4"], ["word5", "word6"]]}`
+
+#### Process File
+
+- **URL**: `/process_file/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data]`
+- **Success Response**: `{"topic": "Main topic", "summary": "Text summary", "paragraphs": [{"text": "Paragraph 1", "sentiment": "Very Positive", "keywords": ["word1", "word2"]}, {"text": "Paragraph 2", "sentiment": "Neutral", "keywords": ["word3", "word4"]}, {"text": "Paragraph 3", "sentiment": "Negative", "keywords": ["word5", "word6"]}]}`
+
+#### To JSON
+
+- **URL**: `/to_json/`
+- **Method**: `POST`
+- **Authentication**: `Token`
+- **Data Params**: `file=[multipart/form-data], data=[string], file_path=[string]`
+- **Success Response**: `{"filename": "output.json"}`
+
+
+### Example Usage
+
+#### Extract Text
+
+```bash
+curl -X POST "http://127.0.0.1:8000/extract_text/" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "file=@/path/to/your/file.pdf"
+```
+
+## Not Implemented Yet
+- Google authentication and password recovery
+- Document preview and analysis download
+- Settings and Help tabs
