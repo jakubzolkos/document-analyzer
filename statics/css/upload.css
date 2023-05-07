@@ -1,0 +1,50 @@
+.upload-zone {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    justify-items: center;
+    top: 10%; 
+    margin-left: 150px;
+}
+
+#file-upload {
+
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    justify-content: center;
+    font-size: 2em;
+    height: 200px;
+    font-weight: bold;
+    color: #999;
+}
+  
+#file-upload:hover {
+
+    border-color: #aaa;
+}
+
+#file-upload.dragover {
+
+    background-color: #f7f7f7;
+    border-color: #aaa;
+}
+
+.form-control-file::-webkit-file-upload-button {
+
+    visibility: hidden;
+}
+
+#right-content {
+
+    margin-left: 200px;
+}
+
+.btn {
+
+    width: 30%;
+    margin: auto;
+}
+
