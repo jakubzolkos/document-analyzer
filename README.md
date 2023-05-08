@@ -36,16 +36,16 @@ Database design is a crucial factor when implementing any web application. The m
 - Tables with locations, addresses, names and institutions 
 - Keyword tables with names and definitions obtained from external website - creating a new document will mark each paragraph within a document with appropriate keyword tags
 
-![Database](https://github.com/ECE530-2023/news-analyzer-jakubzolkos/blob/main/backend/assets/database.png)
+![Database](https://github.com/jakubzolkos/blob/document-analyzer/assets/database.png)
 
 ## Installation
 1. Clone the repository
 ```
-git clone https://github.com/ECE530-2023/unit-test-jakubzolkos
+git clone https://github.com/jakubzolkos/document-analyzer
 ```
 2. Install virtual environment (if not installed already)
 ```
-pip install virtualenv
+pip3 install virtualenv
 ```
 3. Create and activate virtual environment
 ```
@@ -54,7 +54,7 @@ source venv/bin/activate
 ```
 4. Install prerequisites
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 6. Navigate to the root folder and run the application server
 ```
@@ -62,7 +62,23 @@ python3 manage.py runserver
 ```
 
 ## Application Usage Tutorial
+### Login
 After opening the server, you can sign-up with a new account or log into an existing account. A custom authorization model is used that enables registering new users with only an email address and a password (authentication/models.py). The Google authentication and password recovery options are currently unavailable. Authenticated user will obtain a session token that lasts 30 minutes, unless the user logs out of the account and deletes browser cookies. 
+
+![Login](https://github.com/jakubzolkos/blob/document-analyzer/assets/login.png)
+
+### File Uploading and Document View
+After a successful login, the user will be redirected to a dashboard. A navigation bar on the left contains multiple tabs: documents, analytics, setting and help; the last two are currently unavailable. In the documents tab, the user will be able to view all uploaded files, change their name, delete them or download the file (not yet implemented). A green button in the top right corner enables the user to upload multiple files at the same time. Uploading a new file will trigger a POST request during which the API will perform full analysis of the file and save the result to a database (see standalone NLP API in the section below).
+
+![Login](https://github.com/jakubzolkos/document-analyzer/assets/upload.png)
+
+### Analytics
+
+In the analytics tab the user is able to view the data extracted from the uploaded files. Currently, two options are implemented: keyword dictionary and extracted paragraphs with sentiments analysis. In the keyword dictionary, the user can search for desired keywords in a textbox and the API will return a set of keywords that most closely match the desired keyword. In the paragraph view, the user can see all the extracted paragraphs and filter paragraphs based on their sentiments.
+
+![Dictionary](https://github.com/jakubzolkos/document-analyzer/assets/dictionary.png)
+![Paragraphs](https://github.com/jakubzolkos/document-analyzer/assets/paragraphs.png)
+
 
 
 ## Standalone NLP API
