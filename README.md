@@ -68,7 +68,7 @@ After opening the server, you can sign-up with a new account or log into an exis
 ![Login](https://github.com/jakubzolkos/document-analyzer/blob/main/assets/login.png)
 
 ### File Uploading and Document View
-After a successful login, the user will be redirected to a dashboard. A navigation bar on the left contains multiple tabs: documents, analytics, setting and help; the last two are currently unavailable. In the documents tab, the user will be able to view all uploaded files, change their name, delete them or download the file (not yet implemented). A green button in the top right corner enables the user to upload multiple files at the same time. Uploading a new file will trigger a POST request during which the API will perform full analysis of the file and save the result to a database (see standalone NLP API in the section below).
+After a successful login, the user will be redirected to a dashboard. A navigation bar on the left contains multiple tabs: documents, analytics, setting and help; the last two are currently unavailable. In the documents tab, the user will be able to view all uploaded files, change their name, delete them or download the file (not yet implemented). A green button in the top right corner enables the user to upload multiple files at the same time. Uploading a new file will trigger a POST request during which the API will perform full analysis of the file and save the result to a database (see standalone NLP API in the section below). Currently no progress bar has been implemented, therefore, the request progress is indicated by the rotating tab circle. An upload is successful if new files appear in the document view.
 
 ![Login](https://github.com/jakubzolkos/document-analyzer/blob/main/assets/upload.png)
 
