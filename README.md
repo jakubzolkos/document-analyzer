@@ -90,79 +90,82 @@ By default, the API will be accessible at http://127.0.0.1:8000. You can view th
 
 ### Endpoints
 
+#### Extract Definitions
+
+- **URL**: `/extract_definitions/`
+- **Method**: `GET`
+- **Query Params**: `word=[string]`
+- **Success Response**: `{"part_of_speech": "noun", "definition": "a word definition", "pronunciation": "pronunciation", "example": "example sentence"}`
+
 #### Extract Text
 
 - **URL**: `/extract_text/`
 - **Method**: `POST`
-- **Authentication**: `Token`
 - **Data Params**: `file=[multipart/form-data]`
-- **Success Response**: `{"text": "Extracted text"}`
+- **Success Response**: `{"text": "Extracted text content from the file"}`
 
 #### Extract Topic
 
 - **URL**: `/extract_topic/`
 - **Method**: `POST`
-- **Authentication**: `Token`
-- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], num_topics=[int], num_words=[int]`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], num_topics=Optional[int], num_words=Optional[int]`
 - **Success Response**: `{"topic": ["word1", "word2", "word3"]}`
 
 #### Summarize Text
 
 - **URL**: `/summarize_text/`
 - **Method**: `POST`
-- **Authentication**: `Token`
-- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], per=[float]`
-- **Success Response**: `{"summary": "Text summary"}`
+- **Data Params**: `file=Optional[multipart/form-data], text=Optional[string], per=Optional[float]`
+- **Success Response**: `{"summary": "Summarized text content"}`
 
-#### Extract Definitionsg
+#### Sentiment Analysis
 
-- **URL**: `/extract_definitions/`
-- **Method**: `GET`
-- **Authentication**: `Token`
-- **Query Params**: `word=[string]`
-- **Success Response**: `{"part_of_speech": "noun", "definition": "A brief description", "pronunciation": "example", "example": "An example sentence"}`
-
-#### Perform Sentiment Analysis
-
-- **URL**: `/perform_sentiment_analysis/`
+- **URL**: `/sentiment_analysis/`
 - **Method**: `POST`
-- **Authentication**: `Token`
 - **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
-- **Success Response**: `{"sentiments": ["Very Positive", "Neutral", "Negative"]}`
+- **Success Response**: `{"sentiment": "Positive"}`
 
-#### Divide into Paragraphs
+#### Divide Into Paragraphs
 
 - **URL**: `/divide_into_paragraphs/`
 - **Method**: `POST`
-- **Authentication**: `Token`
 - **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
-- **Success Response**: `{"paragraphs": ["Paragraph 1", "Paragraph 2", "Paragraph 3"]}`
+- **Success Response**: `{"paragraphs": ["paragraph1", "paragraph2", "paragraph3"]}`
 
 #### Tag Keywords
 
 - **URL**: `/tag_keywords/`
 - **Method**: `POST`
-- **Authentication**: `Token`
 - **Data Params**: `file=Optional[multipart/form-data], text=Optional[string]`
-- **Success Response**: `{"keywords": [["word1", "word2"], ["word3", "word4"], ["word5", "word6"]]}`
+- **Success Response**: `{"paragraph_keywords": {"paragraph1": ["word1", "word2"], "paragraph2": ["word3", "word4"], "paragraph3": ["word5", "word6"]}}`
 
 #### Process File
 
 - **URL**: `/process_file/`
 - **Method**: `POST`
-- **Authentication**: `Token`
 - **Data Params**: `file=[multipart/form-data]`
-- **Success Response**: `{"topic": "Main topic", "summary": "Text summary", "paragraphs": [{"text": "Paragraph 1", "sentiment": "Very Positive", "keywords": ["word1", "word2"]}, {"text": "Paragraph 2", "sentiment": "Neutral", "keywords": ["word3", "word4"]}, {"text": "Paragraph 3", "sentiment": "Negative", "keywords": ["word5", "word6"]}]}`
+- **Success Response**: `{"topic": ["word1", "word2", "word3"], "summary": "Summarized text content", "paragraphs": [{"text": "paragraph1", "sentiment": "Positive", "keywords": {"word1": {"part_of_speech": "noun", "definition": "a word definition", "pronunciation": "pronunciation", "example": "example sentence"}, "word2": {...}}}, {"text": "paragraph2", "sentiment": "Neutral", "keywords": {...}}, {"text": "paragraph3", "sentiment": "Negative", "keywords": {...}}]}`
 
 
 ### Example Usage
 
-#### Extract Text
-
+Below is an example of how to use the text extraction endpoint. You can use a standard curl call:
 ```bash
 curl -X POST "http://127.0.0.1:8000/extract_text/" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "file=@/path/to/your/file.pdf"
 ```
+Or use e.g. a request library in Python
+```python
+import requests
 
+url = "http://localhost:8000/extract_text/"
+file_path = "path/to/your/pdf_file.pdf"
+
+with open(file_path, "rb") as f:
+    files = {"file": (file_path, f)}
+    response = requests.post(url, files=files)
+
+print(response.json())
+```
 ## Not Implemented Yet
 - Google authentication and password recovery
 - Document preview and analysis download
